@@ -69,6 +69,11 @@ class FlutterCarouselState extends State<FlutterCarousel>
     _carouselState!.options = options;
     _carouselState!.itemCount = widget.itemCount;
 
+    if (_pageController != null) {
+      _pageController!.removeListener(onPageController);
+      _pageController!.dispose();
+    }
+
     /// [_pageController] needs to be re-initialized to respond
     /// to state changes
     _pageController = PageController(
@@ -82,17 +87,24 @@ class FlutterCarouselState extends State<FlutterCarousel>
     /// handle autoplay when state changes
     _handleAutoPlay();
 
-    _pageController!.addListener(() {
-      setState(() {
-        _currentPage = _pageController!.page!.floor();
-        _pageDelta = _pageController!.page! - _pageController!.page!.floor();
-      });
+    _pageController!.addListener(onPageController);
+  }
+
+  void onPageController() {
+    setState(() {
+      _currentPage = _pageController!.page!.floor();
+      _pageDelta = _pageController!.page! - _pageController!.page!.floor();
     });
   }
 
   @override
   void dispose() {
     _clearTimer();
+
+    _carouselState = null;
+    _pageController?.removeListener(onPageController);
+    _pageController?.dispose();
+    _pageController = null;
     super.dispose();
   }
 
@@ -127,12 +139,7 @@ class FlutterCarouselState extends State<FlutterCarousel>
 
     _carouselState!.pageController = _pageController;
 
-    _pageController!.addListener(() {
-      setState(() {
-        _currentPage = _pageController!.page!.floor();
-        _pageDelta = _pageController!.page! - _pageController!.page!.floor();
-      });
-    });
+    _pageController!.addListener(onPageController);
   }
 
   CarouselControllerImpl get carouselController =>
